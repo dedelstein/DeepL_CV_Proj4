@@ -1,9 +1,10 @@
-from glob import glob
+import torch
 import os
 import pandas as pd
+from glob import glob
 from PIL import Image
-import torch
-from torchvision import transforms as T
+from torch.utils.data import DataLoader
+from torchvision.transforms import v2
 
 class FrameImageDataset(torch.utils.data.Dataset):
     def __init__(self, 
@@ -34,7 +35,7 @@ class FrameImageDataset(torch.utils.data.Dataset):
         if self.transform:
             frame = self.transform(frame)
         else:
-            frame = T.ToTensor()(frame)
+            frame = v2.ToTensor()(frame)
 
         return frame, label
 
@@ -74,7 +75,7 @@ class FrameVideoDataset(torch.utils.data.Dataset):
         if self.transform:
             frames = [self.transform(frame) for frame in video_frames]
         else:
-            frames = [T.ToTensor()(frame) for frame in video_frames]
+            frames = [v2.ToTensor()(frame) for frame in video_frames]
         
         if self.stack_frames:
             frames = torch.stack(frames).permute(1, 0, 2, 3)
@@ -91,31 +92,113 @@ class FrameVideoDataset(torch.utils.data.Dataset):
 
         return frames
 
+def get_image_dataloaders(root_dir, batch_size=8):
+    # Define transforms with normalization
+    transform = v2.Compose([
+        v2.Resize((64, 64)),
+        v2.ToTensor(),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
+    ])
 
-if __name__ == '__main__':
-    from torch.utils.data import DataLoader
+    # Create train and validation datasets
+    train_dataset = FrameImageDataset(
+        root_dir=root_dir,
+        split='train',
+        transform=transform
+    )
 
-    #root_dir='/dtu/blackhole/1d/214141/ufc10'
-    root_dir='./ufc10'
+    val_dataset = FrameImageDataset(
+        root_dir=root_dir,
+        split='val',
+        transform=transform
+    )
 
-    transform = T.Compose([T.Resize((64, 64)),T.ToTensor()])
-    frameimage_dataset = FrameImageDataset(root_dir=root_dir, split='val', transform=transform)
-    framevideostack_dataset = FrameVideoDataset(root_dir=root_dir, split='val', transform=transform, stack_frames = True)
-    framevideolist_dataset = FrameVideoDataset(root_dir=root_dir, split='val', transform=transform, stack_frames = False)
+    test_dataset = FrameVideoDataset(
+        root_dir=root_dir,
+        split='test',
+        transform=transform
+    )
 
+    # Create data loaders
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True
+    )
 
-    frameimage_loader = DataLoader(frameimage_dataset,  batch_size=8, shuffle=False)
-    framevideostack_loader = DataLoader(framevideostack_dataset,  batch_size=8, shuffle=False)
-    framevideolist_loader = DataLoader(framevideolist_dataset,  batch_size=8, shuffle=False)
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True
+    )
 
-    # for frames, labels in frameimage_loader:
-    #     print(frames.shape, labels.shape) # [batch, channels, height, width]
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True
+    )
 
-    # for video_frames, labels in framevideolist_loader:
-    #     print(45*'-')
-    #     for frame in video_frames: # loop through number of frames
-    #         print(frame.shape, labels.shape)# [batch, channels, height, width]
+    return train_loader, val_loader, test_loader
 
-    for video_frames, labels in framevideostack_loader:
-        print(video_frames.shape, labels.shape) # [batch, channels, number of frames, height, width]
-            
+def get_video_dataloaders(root_dir, batch_size=8):
+    # Define transforms with normalization
+    transform = v2.Compose([
+        v2.Resize((64, 64)),
+        v2.ToTensor(),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
+    ])
+
+    # Create train and validation datasets
+    train_dataset = FrameVideoDataset(
+        root_dir=root_dir,
+        split='train',
+        transform=transform,
+        stack_frames=True
+    )
+
+    val_dataset = FrameVideoDataset(
+        root_dir=root_dir,
+        split='val',
+        transform=transform,
+        stack_frames=True
+    )
+
+    test_dataset = FrameVideoDataset(
+        root_dir=root_dir,
+        split='test',
+        transform=transform,
+        stack_frames=True
+    )
+
+    # Create data loaders
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True
+    )
+
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True
+    )
+
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True
+    )
+
+    return train_loader, val_loader, test_loader
