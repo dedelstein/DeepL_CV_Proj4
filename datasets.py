@@ -92,13 +92,14 @@ class FrameVideoDataset(torch.utils.data.Dataset):
 
         return frames
 
-def get_image_dataloaders(root_dir, batch_size=8):
+def get_image_dataloaders(root_dir, transform=None, batch_size=8):
     # Define transforms with normalization
-    transform = v2.Compose([
+    if transform is None:
+      transform = v2.Compose([
         v2.Resize((64, 64)),
         v2.ToTensor(),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
-    ])
+      ])
 
     # Create train and validation datasets
     train_dataset = FrameImageDataset(
@@ -146,13 +147,14 @@ def get_image_dataloaders(root_dir, batch_size=8):
 
     return train_loader, val_loader, test_loader
 
-def get_video_dataloaders(root_dir, batch_size=8):
+def get_video_dataloaders(root_dir, transform=None, batch_size=8):
     # Define transforms with normalization
-    transform = v2.Compose([
+    if transform is None:
+      transform = v2.Compose([
         v2.Resize((64, 64)),
         v2.ToTensor(),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
-    ])
+      ])
 
     # Create train and validation datasets
     train_dataset = FrameVideoDataset(

@@ -1,0 +1,1 @@
+{"training_times": {"Simple3DCNN": 102.29281711578369, "ResNet3D": 105.00088763237}, "metrics": {"Simple3DCNN": {"train_acc": 96.2, "val_acc": 73.33333333333333}, "ResNet3D": {"train_acc": 99.4, "val_acc": 78.33333333333333}}}
