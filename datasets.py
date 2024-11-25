@@ -101,6 +101,11 @@ def get_image_dataloaders(root_dir, transform=None, batch_size=8):
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
       ])
 
+    transform_val = v2.Compose([
+        v2.Resize((64, 64)),
+        v2.ToTensor()
+      ])
+
     # Create train and validation datasets
     train_dataset = FrameImageDataset(
         root_dir=root_dir,
@@ -111,13 +116,13 @@ def get_image_dataloaders(root_dir, transform=None, batch_size=8):
     val_dataset = FrameImageDataset(
         root_dir=root_dir,
         split='val',
-        transform=transform
+        transform=transform_val
     )
 
     test_dataset = FrameVideoDataset(
         root_dir=root_dir,
         split='test',
-        transform=transform
+        transform=transform_val
     )
 
     # Create data loaders
@@ -156,6 +161,11 @@ def get_video_dataloaders(root_dir, transform=None, batch_size=8):
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
       ])
 
+    transform_val = v2.Compose([
+        v2.Resize((64, 64)),
+        v2.ToTensor()
+      ])
+    
     # Create train and validation datasets
     train_dataset = FrameVideoDataset(
         root_dir=root_dir,
@@ -167,14 +177,14 @@ def get_video_dataloaders(root_dir, transform=None, batch_size=8):
     val_dataset = FrameVideoDataset(
         root_dir=root_dir,
         split='val',
-        transform=transform,
+        transform=transform_val,
         stack_frames=True
     )
 
     test_dataset = FrameVideoDataset(
         root_dir=root_dir,
         split='test',
-        transform=transform,
+        transform=transform_val,
         stack_frames=True
     )
 
